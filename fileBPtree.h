@@ -1,6 +1,6 @@
 #pragma once
 /*
-ÔËĞĞÇ°ĞèÔÚ³ÌĞòÄ¿Â¼½¨Á¢ÃûÎªBfileµÄÎÄ¼ş£¬·ñÔò±ÀÀ£
+è¿è¡Œå‰éœ€åœ¨ç¨‹åºç›®å½•å»ºç«‹åä¸ºBfileçš„æ–‡ä»¶ï¼Œå¦åˆ™å´©æºƒ
 */
 
 #include<iostream>  
@@ -9,37 +9,37 @@
 using namespace std;
 
 
-#define MAX_KEY 5   //B+Ê÷µÄ½×,±ØĞëÎª´óÓÚ3ÆæÊı  
+#define MAX_KEY 5   //B+æ ‘çš„é˜¶,å¿…é¡»ä¸ºå¤§äº3å¥‡æ•°  
 
 typedef  uint32_t KEYTYPE;
 typedef  uint32_t  FILEP;
 
-//B+Ê÷½ÚµãµÄÊı¾İ½á¹¹  
+//B+æ ‘èŠ‚ç‚¹çš„æ•°æ®ç»“æ„  
 typedef struct
 {
-	KEYTYPE   key[MAX_KEY];      //¹Ø¼ü×ÖÓò  
-	FILEP Pointer[MAX_KEY + 1];    //Ö¸ÕëÓò  
-	int       nkey;              //¹Ø¼ü×ÖÊı  
-	bool  isleaf;                //ÊÇ·ñÎªÒ¶½Úµã Ò¶½Úµã:true ·ñÔòÎªfalse  
+	KEYTYPE   key[MAX_KEY];      //å…³é”®å­—åŸŸ  
+	FILEP Pointer[MAX_KEY + 1];    //æŒ‡é’ˆåŸŸ  
+	int       nkey;              //å…³é”®å­—æ•°  
+	bool  isleaf;                //æ˜¯å¦ä¸ºå¶èŠ‚ç‚¹ å¶èŠ‚ç‚¹:true å¦åˆ™ä¸ºfalse  
 
 }BPlusNode;
 
 
-//²åÈë¹Ø¼ü×ÖµÄÊı¾İ½á¹¹  
+//æ’å…¥å…³é”®å­—çš„æ•°æ®ç»“æ„  
 typedef struct
 {
-	KEYTYPE   key;              //¸Ã¼ÇÂ¼µÄ¹Ø¼ü×Ö  
-	FILEP Raddress;         //¸Ã¹Ø¼ü×Ö¶ÔÓ¦¼ÇÂ¼µÄµØÖ·  
+	KEYTYPE   key;              //è¯¥è®°å½•çš„å…³é”®å­—  
+	FILEP Raddress;         //è¯¥å…³é”®å­—å¯¹åº”è®°å½•çš„åœ°å€  
 
 }TRecord;
 
 
-//±£´æ²éÑ¯½á¹ûµÄÊı¾İ½á¹¹  
+//ä¿å­˜æŸ¥è¯¢ç»“æœçš„æ•°æ®ç»“æ„  
 typedef struct
 {
 	bool  exist;
-	FILEP Baddress;   //±£´æ°üº¬¸Ã¼ÇÂ¼µÄB+Ê÷½ÚµãµØÖ·  
-	FILEP Raddress;   //¸Ã¹Ø¼ü×ÖµÄËùÖ¸ÏòµÄ¼ÇÂ¼µØÖ·  
+	FILEP Baddress;   //ä¿å­˜åŒ…å«è¯¥è®°å½•çš„B+æ ‘èŠ‚ç‚¹åœ°å€  
+	FILEP Raddress;   //è¯¥å…³é”®å­—çš„æ‰€æŒ‡å‘çš„è®°å½•åœ°å€  
 
 }SearchResult;
 
@@ -47,9 +47,9 @@ typedef struct
 
 class BPlusTree
 {
-	FILEP ROOT;       //Ê÷¸ùÔÚÎÄ¼şÄÚµÄÆ«ÒÆµØÖ·  
-	FILE  *Bfile;     //B+Ê÷ÎÄ¼şµÄÖ¸Õë  
-	FILE  *Rfile;     //¼ÇÂ¼ÎÄ¼şµÄÖ¸Õë  
+	FILEP ROOT;       //æ ‘æ ¹åœ¨æ–‡ä»¶å†…çš„åç§»åœ°å€  
+	FILE  *Bfile;     //B+æ ‘æ–‡ä»¶çš„æŒ‡é’ˆ  
+	FILE  *Rfile;     //è®°å½•æ–‡ä»¶çš„æŒ‡é’ˆ  
 
 public:
 
@@ -71,8 +71,6 @@ public:
 	void delete_BPlus_tree(FILEP, TRecord&);
 
 	void EnumLeafKey();
-	void borrow(BPlusNode& cur, BPlusNode& curChild, BPlusNode& adjChild, int i, FILEP current);
-	void merge(BPlusNode& cur, BPlusNode& curChild, BPlusNode& adjChild, int i, FILEP current);
 
 	BPlusTree();
 	~BPlusTree();
