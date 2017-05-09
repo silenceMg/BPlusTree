@@ -2,7 +2,7 @@
 
 BPlusTree::BPlusTree()
 {
-	Bfile = fopen("Bfile", "rb+");     //��B+���ļ�  
+	Bfile = fopen("Bfile", "rb+");     //打开B+树文件  
 
 }
 
@@ -13,7 +13,7 @@ BPlusTree :: ~BPlusTree()
 
 
 
-void BPlusTree::Build_BPlus_Tree()   //����һ�ÿ�B+��  
+void BPlusTree::Build_BPlus_Tree()   //建立一棵空B+树  
 {
 	ROOT = GetBPlusNode();
 	BPlusNode r;
@@ -25,7 +25,7 @@ void BPlusTree::Build_BPlus_Tree()   //����һ�ÿ�B+��
 
 
 
-void    BPlusTree::Insert_BPlus_Tree(TRecord &record)        //��B+������ؼ���  
+void    BPlusTree::Insert_BPlus_Tree(TRecord &record)        //向B+树插入关键字  
 {
 	BPlusNode r;//root
 	ReadBPlusNode(ROOT, r);
@@ -44,7 +44,7 @@ void    BPlusTree::Insert_BPlus_Tree(TRecord &record)        //��B+������ؼ���
 
 		WriteBPlusNode(ROOT, newroot);//write new root to a new place.
 
-		//���Ѹ��ڵ�
+		//分裂根节点
 	}
 	insert_bplus_tree(ROOT, record);//if root is not full, insert node directly.
 }
@@ -58,18 +58,18 @@ void BPlusTree::insert_bplus_tree(FILEP current, TRecord &record)
 
 	int   i;//position of given key's lower_bound
 	for (i = 0; i < x.nkey && x.key[i] < record.key; i++);
-	if (i < x.nkey && x.isleaf && x.key[i] == record.key)  //��B+��Ҷ�ڵ��ҵ�����ͬ�ؼ���  
+	if (i < x.nkey && x.isleaf && x.key[i] == record.key)  //在B+树叶节点找到了相同关键字  
 	{
-		//�ؼ��ֲ����ظ�  
+		//关键字插入重复  
 		return;
 	}
 
-	if (!x.isleaf)//�������Ҷ�ڵ�  
+	if (!x.isleaf)//如果不是叶节点  
 	{
 		BPlusNode y;
 		ReadBPlusNode(x.Pointer[i], y);//find child of x, if y is leaf node, we will handle it in Split_BPlus_Node().
 
-		if (y.nkey == MAX_KEY)     //���x���ӽڵ�������������ӽڵ����  
+		if (y.nkey == MAX_KEY)     //如果x的子节点已满，则这个子节点分裂  
 		{
 			Split_BPlus_Node(x, y, i);
 			WriteBPlusNode(current, x);//update father node
@@ -85,7 +85,7 @@ void BPlusTree::insert_bplus_tree(FILEP current, TRecord &record)
 		}
 
 	}
-	else          //�����Ҷ�ڵ�,��ֱ�ӽ��ؼ��ֲ���key������  
+	else          //如果是叶节点,则直接将关键字插入key数组中  
 	{
 		//make room for new node.
 		for (int j = x.nkey; j > i; j--)
@@ -96,7 +96,7 @@ void BPlusTree::insert_bplus_tree(FILEP current, TRecord &record)
 		x.key[i] = record.key;
 		x.nkey++;
 
-		//����¼�ĵ�ַ����x.Pointer[i]  
+		//将记录的地址赋给x.Pointer[i]  
 
 		x.Pointer[i] = record.Raddress;
 
@@ -108,7 +108,7 @@ void BPlusTree::insert_bplus_tree(FILEP current, TRecord &record)
 
 
 
-void    BPlusTree::Split_BPlus_Node(BPlusNode &father, BPlusNode &current, const int childnum)            //��������B+���ڵ�  
+void    BPlusTree::Split_BPlus_Node(BPlusNode &father, BPlusNode &current, const int childnum)            //分裂满的B+树节点  
 {
 	int half = MAX_KEY / 2;
 
@@ -141,7 +141,7 @@ void    BPlusTree::Split_BPlus_Node(BPlusNode &father, BPlusNode &current, const
 
 	current.nkey = half;
 
-	if (current.isleaf)   //�����ǰ�����ѽڵ���Ҷ��  
+	if (current.isleaf)   //如果当前被分裂节点是叶子  
 	{
 		//save the key which has been pushed up
 		current.nkey++;
@@ -155,7 +155,7 @@ void    BPlusTree::Split_BPlus_Node(BPlusNode &father, BPlusNode &current, const
 
 
 
-void BPlusTree::Search_BPlus_Tree(TRecord &record, SearchResult &result) const        //��B+����ѯһ���ؼ���  
+void BPlusTree::Search_BPlus_Tree(TRecord &record, SearchResult &result) const        //在B+树查询一个关键字  
 {
 	int i;
 
@@ -168,10 +168,10 @@ void BPlusTree::Search_BPlus_Tree(TRecord &record, SearchResult &result) const  
 
 		for (i = 0; i < a.nkey && record.key > a.key[i]; i++);
 
-		if (i < a.nkey && a.isleaf && record.key == a.key[i])       //��B+��Ҷ�ڵ��ҵ��˵�ֵ�Ĺؼ���  
+		if (i < a.nkey && a.isleaf && record.key == a.key[i])       //在B+树叶节点找到了等值的关键字  
 		{
 			result.Baddress = current;
-			result.Raddress = a.Pointer[i];                       //���ظùؼ�������Ӧ�ļ�¼�ĵ�ַ  
+			result.Raddress = a.Pointer[i];                       //返回该关键字所对应的记录的地址  
 			result.exist = true;
 
 			return;
@@ -184,59 +184,7 @@ void BPlusTree::Search_BPlus_Tree(TRecord &record, SearchResult &result) const  
 }
 
 
-void BPlusTree::borrow(BPlusNode& cur, BPlusNode& curChild, BPlusNode& adjChild, int i, FILEP current)
-{
-	for (int j = curChild.nkey; j > 0; j--)
-	{
-		curChild.key[j] = curChild.key[j - 1];
-		curChild.Pointer[j] = curChild.Pointer[j - 1];
-	}
-
-	curChild.key[0] = cur.key[i - 1];
-	curChild.Pointer[0] = adjChild.Pointer[adjChild.nkey - 1];
-
-	curChild.nkey++;
-
-	adjChild.nkey--;
-
-	cur.key[i - 1] = adjChild.key[adjChild.nkey - 1];
-	cur.key[i] = curChild.key[curChild.nkey - 2];
-
-	WriteBPlusNode(current, cur);
-	WriteBPlusNode(cur.Pointer[i - 1], adjChild);
-	WriteBPlusNode(cur.Pointer[i], curChild);
-}
-
-void BPlusTree::merge(BPlusNode& cur, BPlusNode& curChild, BPlusNode& adjChild, int i, FILEP current)
-{
-	int j = 0;
-	for (; j < curChild.nkey; j++)
-	{
-		adjChild.key[adjChild.nkey + j] = curChild.key[j];
-		adjChild.Pointer[adjChild.nkey + j] = curChild.Pointer[j];
-	}
-	adjChild.nkey += curChild.nkey;
-
-	adjChild.Pointer[MAX_KEY] = curChild.Pointer[MAX_KEY];
-
-	//�ͷ�child�ڵ�ռ�õĿռ�x.Pointer[i]  
-
-	for (j = i - 1; j < cur.nkey - 1; j++)
-	{
-		cur.key[j] = cur.key[j + 1];
-		cur.Pointer[j + 1] = cur.Pointer[j + 2];
-	}
-	cur.nkey--;
-
-	cur.key[i - 1] = adjChild.key[adjChild.nkey - 2];
-
-	WriteBPlusNode(current, cur);
-	WriteBPlusNode(cur.Pointer[i - 1], adjChild);
-
-	i--;
-}
-
-void BPlusTree::delete_BPlus_tree(FILEP current, TRecord &record)
+void    BPlusTree::delete_BPlus_tree(FILEP current, TRecord &record)
 {
 	int i, j;
 
@@ -246,123 +194,314 @@ void BPlusTree::delete_BPlus_tree(FILEP current, TRecord &record)
 
 	for (i = 0; i < x.nkey && record.key > x.key[i]; i++);
 
-	if (i < x.nkey && x.key[i] == record.key)  //�ڵ�ǰ�ڵ��ҵ��ؼ���  
+	if (i < x.nkey && x.key[i] == record.key)  //在当前节点找到关键字  
 	{
 
-		if (!x.isleaf)     //���ڽڵ��ҵ��ؼ���  
+		if (!x.isleaf)     //在内节点找到关键字  
 		{
 			BPlusNode child;
 			ReadBPlusNode(x.Pointer[i], child);
 
-			if (child.isleaf)     //���������Ҷ�ڵ�  
+			if (child.isleaf)     //如果孩子是叶节点  
 			{
-				if (child.nkey > MAX_KEY / 2)      //���A  
-				{
+				if (child.nkey > MAX_KEY / 2)      //情况A  
+				{     //1、找到关键字，当前节点是内节点，孩子是叶子节点，孩子节点半满
+					  //直接删除
 					x.key[i] = child.key[child.nkey - 2];
 					child.nkey--;
 
 					WriteBPlusNode(current, x);
 					WriteBPlusNode(x.Pointer[i], child);
-
+                    //删除完就return了
 					return;
 				}
-				else    //�����ӽڵ�Ĺؼ�������������  
+				else    //否则孩子节点的关键字数量不过半  
 				{
-					if (i > 0)      //�����ֵܽڵ�  
+					if (i > 0)      //有左兄弟节点  
 					{
 						BPlusNode lbchild;
 						ReadBPlusNode(x.Pointer[i - 1], lbchild);
+						//2、找到关键字，当前节点是内节点，孩子是叶子节点，孩子节点不半满，左孩子半满
+						//向左孩子借record									
+						if (lbchild.nkey > MAX_KEY / 2)        //情况B  
+						{
+							//右移键值和指针
+							for (j = child.nkey; j > 0; j--)
+							{
+								child.key[j] = child.key[j - 1];
+								child.Pointer[j] = child.Pointer[j - 1];
+							}
+                            //下放父节点键值和指针
+							child.key[0] = x.key[i - 1];
+							child.Pointer[0] = lbchild.Pointer[lbchild.nkey - 1];
 
-						if (lbchild.nkey > MAX_KEY / 2)        //���B  
-						{
-							borrow(x, child, lbchild,i,current);
+							child.nkey++;
+
+							lbchild.nkey--;
+                            //更新父节点键值和指针
+							x.key[i - 1] = lbchild.key[lbchild.nkey - 1];
+							x.key[i] = child.key[child.nkey - 2];
+                            //写回
+							WriteBPlusNode(current, x);
+							WriteBPlusNode(x.Pointer[i - 1], lbchild);
+							WriteBPlusNode(x.Pointer[i], child);
+
 						}
-						else    //���C  
+						else    //情况C  
 						{
-							merge(x, child, lbchild, i, current);
+							//3、找到关键字，当前节点是内节点，孩子是叶子节点，孩子节点不半满，左孩子也不半满
+							//向左孩子合并,child页加入freelist
+								  //拷贝
+							for (j = 0; j < child.nkey; j++)
+							{
+								lbchild.key[lbchild.nkey + j] = child.key[j];
+								lbchild.Pointer[lbchild.nkey + j] = child.Pointer[j];
+							}
+							lbchild.nkey += child.nkey;
+
+							lbchild.Pointer[MAX_KEY] = child.Pointer[MAX_KEY];
+
+
+							//更新当前内节点
+							for (j = i - 1; j < x.nkey - 1; j++)
+							{
+								x.key[j] = x.key[j + 1];
+								x.Pointer[j + 1] = x.Pointer[j + 2];
+							}
+							x.nkey--;
+							//i-1指向新的lbchild右端(末端)
+							x.key[i - 1] = lbchild.key[lbchild.nkey - 2];
+
+							WriteBPlusNode(current, x);
+							WriteBPlusNode(x.Pointer[i - 1], lbchild);
+							//游标减1
+							i--;
+
 						}
+
+
 					}
-					else      //ֻ�����ֵܽڵ�  
+					else      //只有右兄弟节点  
 					{
+						
 						BPlusNode rbchild;
 						ReadBPlusNode(x.Pointer[i + 1], rbchild);
+                        
+						if (rbchild.nkey > MAX_KEY / 2)        //情况D  
+						{
+							//4、找到关键字，当前节点是内节点，孩子是叶子节点，孩子节点不半满，只有右兄弟节点，右兄弟节点半满
+						    //向右孩子借record
+							x.key[i] = rbchild.key[0];
+							child.key[child.nkey] = rbchild.key[0];
+							child.Pointer[child.nkey] = rbchild.Pointer[0];
+							child.nkey++;
 
-						if (rbchild.nkey > MAX_KEY / 2)        //���D  
-						{
-							borrow(x, child, rbchild, i, current);
+							for (j = 0; j < rbchild.nkey - 1; j++)
+							{
+								rbchild.key[j] = rbchild.key[j + 1];
+								rbchild.Pointer[j] = rbchild.Pointer[j + 1];
+							}
+
+							rbchild.nkey--;
+
+							WriteBPlusNode(current, x);
+							WriteBPlusNode(x.Pointer[i], child);
+							WriteBPlusNode(x.Pointer[i + 1], rbchild);
+
 						}
-						else    //���E  
+						else    //情况E  
 						{
-							merge(x, child, rbchild, i, current);
+							//5、找到关键字，当前节点是内节点，孩子是叶子节点，孩子节点不半满，只有右兄弟节点，右兄弟节点不半满
+						    //右兄弟节点向左孩子节点合并
+							for (j = 0; j < rbchild.nkey; j++)
+							{
+								child.key[child.nkey + j] = rbchild.key[j];
+								child.Pointer[child.nkey + j] = rbchild.Pointer[j];
+							}
+							child.nkey += rbchild.nkey;
+
+							child.Pointer[MAX_KEY] = rbchild.Pointer[MAX_KEY];
+
+							//释放rbchild占用的空间x.Pointer[i+1]  
+
+							for (j = i; j < x.nkey - 1; j++)
+							{
+								x.key[j] = x.key[j + 1];
+								x.Pointer[j + 1] = x.Pointer[j + 2];
+							}
+							x.nkey--;
+
+							WriteBPlusNode(current, x);
+							WriteBPlusNode(x.Pointer[i], child);
+
 						}
+
 					}
-				}
-			}
-			else      //���F  
-			{
 
-				//�ҵ�key��B+��Ҷ�ڵ�����ֵܹؼ���,������ؼ���ȡ��key��λ��  
+				}
+
+			}
+			else      //情况F  
+			{
+                //6、找到关键字key，当前节点是内节点，孩子也是内节点
+				//找到key在B+树叶节点的左兄弟关键字,将这个关键字取代key的位置  
 
 				TRecord trecord;
 				trecord.key = record.key;
+				
 				SearchResult result;
 				Search_BPlus_Tree(trecord, result);
-
+                //找到了叶子节点左兄弟节点
 				BPlusNode last;
-
 				ReadBPlusNode(result.Baddress, last);
-
+                //更新当前节点后写回
 				x.key[i] = last.key[last.nkey - 2];
-
 				WriteBPlusNode(current, x);
 
+                //接下来要保证当前节点的孩子节点半满，内部节点的借用以及合并和叶子节点的借用合并不一样
+				if (child.nkey > MAX_KEY / 2)        //情况H  
+				{
 
-				if (child.nkey > MAX_KEY / 2)        //���H  
-				{
-					//���ӽڵ�Ĺؼ��������ﵽ��������������
 				}
-				else          //�����ӽڵ�Ĺؼ�������������,���ֵܽڵ��ĳһ���ؼ�����������  
+				else          //否则孩子节点的关键字数量不过半,则将兄弟节点的某一个关键字移至孩子  
 				{
-					if (i > 0)  //x.key[i]�����ֵ�  
+					if (i > 0)  //x.key[i]有左兄弟  
 					{
+						
 						BPlusNode lbchild;
 						ReadBPlusNode(x.Pointer[i - 1], lbchild);
 
-						if (lbchild.nkey > MAX_KEY / 2)       //���I  
+						if (lbchild.nkey > MAX_KEY / 2)       //情况I  
 						{
-							borrow(x, child, lbchild, i, current);
+							//7、找到关键字key，当前节点是内节点，孩子也是内节点，孩子节点不半满，有左兄弟节点，左兄弟节点半满
+							//向左兄弟节点借record
+							
+							//腾出1个单位的空间
+							for (j = child.nkey; j > 0; j--)
+							{
+								child.key[j] = child.key[j - 1];
+								child.Pointer[j + 1] = child.Pointer[j];
+							}
+							child.Pointer[1] = child.Pointer[0];
+							
+							child.key[0] = x.key[i - 1];
+							child.Pointer[0] = lbchild.Pointer[lbchild.nkey];
+
+							child.nkey++;
+
+							x.key[i - 1] = lbchild.key[lbchild.nkey - 1];
+							lbchild.nkey--;
+
+							WriteBPlusNode(current, x);
+							WriteBPlusNode(x.Pointer[i - 1], lbchild);
+							WriteBPlusNode(x.Pointer[i], child);
 						}
-						else        //���J  
+						else        //情况J  
 						{
-							merge(x, child, lbchild, i, current);
+							//8、找到关键字key，当前节点是内节点，孩子也是内节点，孩子节点不半满，有左兄弟节点，左兄弟节点不半满
+							//向左兄弟节点合并，把清空后的child节点加入freelist
+							lbchild.key[lbchild.nkey] = x.key[i - 1];   //将孩子节点复制到其左兄弟的末尾  
+							lbchild.nkey++;
+
+							for (j = 0; j < child.nkey; j++)      //将child节点拷贝到lbchild节点的末尾,  
+							{
+								lbchild.key[lbchild.nkey + j] = child.key[j];
+								lbchild.Pointer[lbchild.nkey + j] = child.Pointer[j];
+							}
+							lbchild.Pointer[lbchild.nkey + j] = child.Pointer[j];
+							lbchild.nkey += child.nkey;        //已经将child拷贝到lbchild节点  
+
+
+							//释放child节点的存储空间,x.Pointer[i]  
+
+
+							//将找到关键字的孩子child与关键字左兄弟的孩子lbchild合并后,将该关键字前移,使当前节点的关键字减少一个  
+							for (j = i - 1; j < x.nkey - 1; j++)
+							{
+								x.key[j] = x.key[j + 1];
+								x.Pointer[j + 1] = x.Pointer[j + 2];
+							}
+							x.nkey--;
+
+							WriteBPlusNode(current, x);
+							WriteBPlusNode(x.Pointer[i - 1], lbchild);
+
+							i--;
+
 						}
 
 					}
-					else        //����x.key[i]ֻ�����ֵ�  
+					else        //否则x.key[i]只有右兄弟  
 					{
+						
 						BPlusNode rbchild;
 						ReadBPlusNode(x.Pointer[i + 1], rbchild);
 
-						if (rbchild.nkey > MAX_KEY / 2)     //���K  
+						if (rbchild.nkey > MAX_KEY / 2)     //情况K  
 						{
+							//9、找到关键字key，当前节点是内节点，孩子也是内节点，孩子节点不半满，有右兄弟节点，右兄弟节点半满
+							//从右兄弟节点借record
+	
+							child.key[child.nkey] = x.key[i];
+							child.nkey++;
 
-							borrow(x, child, rbchild, i, current);
+							child.Pointer[child.nkey] = rbchild.Pointer[0];
+							x.key[i] = rbchild.key[0];
+
+							for (j = 0; j < rbchild.nkey - 1; j++)
+							{
+								rbchild.key[j] = rbchild.key[j + 1];
+								rbchild.Pointer[j] = rbchild.Pointer[j + 1];
+							}
+							rbchild.Pointer[j] = rbchild.Pointer[j + 1];
+							rbchild.nkey--;
+
+							WriteBPlusNode(current, x);
+							WriteBPlusNode(x.Pointer[i], child);
+							WriteBPlusNode(x.Pointer[i + 1], rbchild);
 
 						}
-						else        //���L  
+						else        //情况L  
 						{
-							merge(x, child, rbchild, i, current);
+							//10、找到关键字key，当前节点是内节点，孩子也是内节点，孩子节点不半满，有右兄弟节点，右兄弟节点不半满
+							//向左合并
+							child.key[child.nkey] = x.key[i];
+							child.nkey++;
+
+							for (j = 0; j < rbchild.nkey; j++)     //将rbchild节点合并到child节点后  
+							{
+								child.key[child.nkey + j] = rbchild.key[j];
+								child.Pointer[child.nkey + j] = rbchild.Pointer[j];
+							}
+							child.Pointer[child.nkey + j] = rbchild.Pointer[j];
+
+							child.nkey += rbchild.nkey;
+
+							//释放rbchild节点所占用的空间,x,Pointer[i+1]  
+
+							for (j = i; j < x.nkey - 1; j++)    //当前将关键字之后的关键字左移一位,使该节点的关键字数量减一  
+							{
+								x.key[j] = x.key[j + 1];
+								x.Pointer[j + 1] = x.Pointer[j + 2];
+							}
+							x.nkey--;
+
+							WriteBPlusNode(current, x);
+							WriteBPlusNode(x.Pointer[i], child);
 
 						}
+
 					}
 				}
+
 			}
 
 			delete_BPlus_tree(x.Pointer[i], record);
 
 		}
-		else  //���G  
+		else  //情况G  
 		{
+			//11、在当前节点找到关键字，当前节点是叶子节点，直接删除返回
 			for (j = i; j < x.nkey - 1; j++)
 			{
 				x.key[j] = x.key[j + 1];
@@ -371,123 +510,283 @@ void BPlusTree::delete_BPlus_tree(FILEP current, TRecord &record)
 			x.nkey--;
 
 			WriteBPlusNode(current, x);
-
+            //直接返回
 			return;
 		}
 
 	}
-	else        //�ڵ�ǰ�ڵ�û�ҵ��ؼ���     
+	else        //在当前节点没找到关键字     
 	{
-		if (!x.isleaf)    //û�ҵ��ؼ���,��ؼ��ֱ�Ȼ��������Pointer[i]Ϊ����������  
+		if (!x.isleaf)    //没找到关键字,则关键字必然包含在以Pointer[i]为根的子树中  
 		{
 			BPlusNode child;
 			ReadBPlusNode(x.Pointer[i], child);
 
-			if (!child.isleaf)      //����亢�ӽڵ����ڽڵ�  
-			{
-				if (child.nkey > MAX_KEY / 2)        //���H  
+			if (!child.isleaf)      //如果其孩子节点是内节点  
+			{   //递归下降，下降之前保证子节点是半满的
+			
+				if (child.nkey > MAX_KEY / 2)        //情况H  
 				{
 
 				}
-				else          //�����ӽڵ�Ĺؼ�������������,���ֵܽڵ��ĳһ���ؼ�����������  
+				else          //否则孩子节点的关键字数量不过半,则将兄弟节点的某一个关键字移至孩子  
 				{
-					if (i > 0)  //x.key[i]�����ֵ�  
+					if (i > 0)  //x.key[i]有左兄弟  
 					{
 						BPlusNode lbchild;
 						ReadBPlusNode(x.Pointer[i - 1], lbchild);
 
-						if (lbchild.nkey > MAX_KEY / 2)       //���I  
+						if (lbchild.nkey > MAX_KEY / 2)       //情况I  
 						{
-							borrow(x, child, lbchild, i, current);
+							for (j = child.nkey; j > 0; j--)
+							{
+								child.key[j] = child.key[j - 1];
+								child.Pointer[j + 1] = child.Pointer[j];
+							}
+							child.Pointer[1] = child.Pointer[0];
+							child.key[0] = x.key[i - 1];
+							child.Pointer[0] = lbchild.Pointer[lbchild.nkey];
+
+							child.nkey++;
+
+							x.key[i - 1] = lbchild.key[lbchild.nkey - 1];
+							lbchild.nkey--;
+
+							WriteBPlusNode(current, x);
+							WriteBPlusNode(x.Pointer[i - 1], lbchild);
+							WriteBPlusNode(x.Pointer[i], child);
 						}
-						else        //���J  
+						else        //情况J  
 						{
-							merge(x, child, lbchild, i, current);
+							lbchild.key[lbchild.nkey] = x.key[i - 1];   //将孩子节点复制到其左兄弟的末尾  
+							lbchild.nkey++;
+
+							for (j = 0; j < child.nkey; j++)      //将child节点拷贝到lbchild节点的末尾,  
+							{
+								lbchild.key[lbchild.nkey + j] = child.key[j];
+								lbchild.Pointer[lbchild.nkey + j] = child.Pointer[j];
+							}
+							lbchild.Pointer[lbchild.nkey + j] = child.Pointer[j];
+							lbchild.nkey += child.nkey;        //已经将child拷贝到lbchild节点  
+
+
+							//释放child节点的存储空间,x.Pointer[i]  
+
+
+							//将找到关键字的孩子child与关键字左兄弟的孩子lbchild合并后,将该关键字前移,使当前节点的关键字减少一个  
+							for (j = i - 1; j < x.nkey - 1; j++)
+							{
+								x.key[j] = x.key[j + 1];
+								x.Pointer[j + 1] = x.Pointer[j + 2];
+							}
+							x.nkey--;
+
+							WriteBPlusNode(current, x);
+							WriteBPlusNode(x.Pointer[i - 1], lbchild);
+
+							i--;
 
 						}
 
 					}
-					else        //����x.key[i]ֻ�����ֵ�  
+					else        //否则x.key[i]只有右兄弟  
 					{
 						BPlusNode rbchild;
 						ReadBPlusNode(x.Pointer[i + 1], rbchild);
 
-						if (rbchild.nkey > MAX_KEY / 2)     //���K  
+						if (rbchild.nkey > MAX_KEY / 2)     //情况K  
 						{
 
-							borrow(x, child, rbchild, i, current);
+							child.key[child.nkey] = x.key[i];
+							child.nkey++;
+
+							child.Pointer[child.nkey] = rbchild.Pointer[0];
+							x.key[i] = rbchild.key[0];
+
+							for (j = 0; j < rbchild.nkey - 1; j++)
+							{
+								rbchild.key[j] = rbchild.key[j + 1];
+								rbchild.Pointer[j] = rbchild.Pointer[j + 1];
+							}
+							rbchild.Pointer[j] = rbchild.Pointer[j + 1];
+							rbchild.nkey--;
+
+							WriteBPlusNode(current, x);
+							WriteBPlusNode(x.Pointer[i], child);
+							WriteBPlusNode(x.Pointer[i + 1], rbchild);
 
 						}
-						else        //���L  
+						else        //情况L  
 						{
-							merge(x, child, rbchild, i, current);
+							child.key[child.nkey] = x.key[i];
+							child.nkey++;
+
+							for (j = 0; j < rbchild.nkey; j++)     //将rbchild节点合并到child节点后  
+							{
+								child.key[child.nkey + j] = rbchild.key[j];
+								child.Pointer[child.nkey + j] = rbchild.Pointer[j];
+							}
+							child.Pointer[child.nkey + j] = rbchild.Pointer[j];
+
+							child.nkey += rbchild.nkey;
+
+							//释放rbchild节点所占用的空间,x,Pointer[i+1]  
+
+							for (j = i; j < x.nkey - 1; j++)    //当前将关键字之后的关键字左移一位,使该节点的关键字数量减一  
+							{
+								x.key[j] = x.key[j + 1];
+								x.Pointer[j + 1] = x.Pointer[j + 2];
+							}
+							x.nkey--;
+
+							WriteBPlusNode(current, x);
+							WriteBPlusNode(x.Pointer[i], child);
 
 						}
 
 					}
 				}
 			}
-			else  //�����亢�ӽڵ�����ڵ�  
+			else  //否则其孩子节点是外节点  
 			{
-				if (child.nkey > MAX_KEY / 2)  //���M  
+				//12、当前节点是内节点，当前节点中没找到关键字，孩子节点是叶子节点
+				//则关键字必然包含在Pointer[i]指向的叶子节点中，保证当前节点的孩子节点半满，然后递归删除
+				if (child.nkey > MAX_KEY / 2)  //情况M  
 				{
 
 				}
-				else        //�����ӽڵ㲻������  
+				else        //否则孩子节点不到半满  
 				{
-					if (i > 0) //�����ֵ�  
+					if (i > 0) //有左兄弟  
 					{
 						BPlusNode lbchild;
 						ReadBPlusNode(x.Pointer[i - 1], lbchild);
 
-						if (lbchild.nkey > MAX_KEY / 2)       //���N  
+						if (lbchild.nkey > MAX_KEY / 2)       //情况N  
 						{
-							borrow(x, child, lbchild, i, current);
+							for (j = child.nkey; j > 0; j--)
+							{
+								child.key[j] = child.key[j - 1];
+								child.Pointer[j] = child.Pointer[j - 1];
+							}
+							child.key[0] = x.key[i - 1];
+							child.Pointer[0] = lbchild.Pointer[lbchild.nkey - 1];
+							child.nkey++;
+							lbchild.nkey--;
+
+							x.key[i - 1] = lbchild.key[lbchild.nkey - 1];
+
+							WriteBPlusNode(x.Pointer[i - 1], lbchild);
+							WriteBPlusNode(x.Pointer[i], child);
+							WriteBPlusNode(current, x);
 
 						}
-						else        //���O  
+						else        //情况O  
 						{
 
-							merge(x, child, lbchild, i, current);
+							for (j = 0; j < child.nkey; j++)        //与左兄弟孩子节点合并  
+							{
+								lbchild.key[lbchild.nkey + j] = child.key[j];
+								lbchild.Pointer[lbchild.nkey + j] = child.Pointer[j];
+							}
+							lbchild.nkey += child.nkey;
+
+							lbchild.Pointer[MAX_KEY] = child.Pointer[MAX_KEY];
+
+							//释放child占用的空间x.Pointer[i]  
+
+							for (j = i - 1; j < x.nkey - 1; j++)
+							{
+								x.key[j] = x.key[j + 1];
+								x.Pointer[j + 1] = x.Pointer[j + 2];
+							}
+
+							x.nkey--;
+
+							WriteBPlusNode(x.Pointer[i - 1], lbchild);
+							WriteBPlusNode(current, x);
+
+							i--;
 
 						}
 
 					}
-					else        //����ֻ�����ֵ�  
+					else        //否则只有右兄弟  
 					{
 						BPlusNode rbchild;
 						ReadBPlusNode(x.Pointer[i + 1], rbchild);
 
-						if (rbchild.nkey > MAX_KEY / 2)       //���P  
+						if (rbchild.nkey > MAX_KEY / 2)       //情况P  
 						{
-							borrow(x, child, rbchild, i, current);
+							x.key[i] = rbchild.key[0];
+							child.key[child.nkey] = rbchild.key[0];
+							child.Pointer[child.nkey] = rbchild.Pointer[0];
+							child.nkey++;
+
+							for (j = 0; j < rbchild.nkey - 1; j++)
+							{
+								rbchild.key[j] = rbchild.key[j + 1];
+								rbchild.Pointer[j] = rbchild.Pointer[j + 1];
+							}
+							rbchild.nkey--;
+
+							WriteBPlusNode(current, x);
+							WriteBPlusNode(x.Pointer[i + 1], rbchild);
+							WriteBPlusNode(x.Pointer[i], child);
 
 						}
-						else        //���Q  
+						else        //情况Q  
 						{
-							merge(x, child, rbchild, i, current);
+							for (j = 0; j < rbchild.nkey; j++)
+							{
+								child.key[child.nkey + j] = rbchild.key[j];
+								child.Pointer[child.nkey + j] = rbchild.Pointer[j];
+							}
+							child.nkey += rbchild.nkey;
+							child.Pointer[MAX_KEY] = rbchild.Pointer[MAX_KEY];
+
+							//释放rbchild占用的空间x.Pointer[i+1]  
+
+							for (j = i; j < x.nkey - 1; j++)
+							{
+								x.key[j] = x.key[j + 1];
+								x.Pointer[j + 1] = x.Pointer[j + 2];
+							}
+							x.nkey--;
+
+							WriteBPlusNode(current, x);
+							WriteBPlusNode(x.Pointer[i], child);
+
+
 						}
+
 					}
+
 				}
+
 			}
+
 			delete_BPlus_tree(x.Pointer[i], record);
 		}
+        //else树中没有这个值，所以直接返回就行
+
 	}
+
+
 }
 
 
-
-void BPlusTree::Delete_BPlus_Tree(TRecord &record)    //��B+��ɾ��һ���ؼ���  
+void BPlusTree::Delete_BPlus_Tree(TRecord &record)    //在B+中删除一个关键字  
 {
 	delete_BPlus_tree(ROOT, record);
 
 	BPlusNode rootnode;
 	ReadBPlusNode(ROOT, rootnode);
 
-	if (!rootnode.isleaf && rootnode.nkey == 0)    //���ɾ���ؼ��ֺ���ڵ㲻��Ҷ�ڵ㣬���ҹؼ�������Ϊ0ʱ���ڵ�ҲӦ�ñ�ɾ��  
+	if (!rootnode.isleaf && rootnode.nkey == 0)    //如果删除关键字后根节点不是叶节点，并且关键字数量为0时根节点也应该被删除  
 	{
-		//�ͷ�ROOT�ڵ�ռ�õĿռ�  
-		ROOT = rootnode.Pointer[0];         //���ڵ�����,B+���߶ȼ�1  
+		//释放ROOT节点占用的空间  
+		ROOT = rootnode.Pointer[0];         //根节点下移,B+树高度减1  
 
 	}
 
@@ -496,7 +795,7 @@ void BPlusTree::Delete_BPlus_Tree(TRecord &record)    //��B+��ɾ��һ���ؼ���
 
 
 
-void BPlusTree::EnumLeafKey()    //����ö��B+��Ҷ�ڵ�����йؼ���  
+void BPlusTree::EnumLeafKey()    //依次枚举B+树叶节点的所有关键字  
 {
 	BPlusNode head;
 
@@ -523,14 +822,14 @@ void BPlusTree::EnumLeafKey()    //����ö��B+��Ҷ�ڵ�����йؼ���
 
 
 
-inline FILEP BPlusTree::GetBPlusNode()  const //�ڴ����Ϸ���һ��B+���ڵ�ռ�,add to file's tail
+inline FILEP BPlusTree::GetBPlusNode()  const //在磁盘上分配一块B+树节点空间,add to file's tail
 {
 	fseek(Bfile, 0, SEEK_END);
 
 	return  ftell(Bfile);
 }
 
-inline void BPlusTree::ReadBPlusNode(const FILEP address, BPlusNode   &r) const //��ȡaddress��ַ�ϵ�һ��B+���ڵ�  
+inline void BPlusTree::ReadBPlusNode(const FILEP address, BPlusNode   &r) const //读取address地址上的一块B+树节点  
 {
 	fseek(Bfile, address, SEEK_SET);
 	fread((char*)(&r), sizeof(BPlusNode), 1, Bfile);
@@ -538,7 +837,7 @@ inline void BPlusTree::ReadBPlusNode(const FILEP address, BPlusNode   &r) const 
 }
 
 
-inline void BPlusTree::WriteBPlusNode(const FILEP address, const BPlusNode &r) //��һ��B+���ڵ�д��address��ַ  
+inline void BPlusTree::WriteBPlusNode(const FILEP address, const BPlusNode &r) //将一个B+树节点写入address地址  
 {
 	fseek(Bfile, address, SEEK_SET);
 	fwrite((char*)(&r), sizeof(BPlusNode), 1, Bfile);
@@ -550,7 +849,7 @@ int main()
 {
 	BPlusTree tree;
 
-	tree.Build_BPlus_Tree();      //����  
+	tree.Build_BPlus_Tree();      //建树  
 
 	TRecord record;   SearchResult result;
 
